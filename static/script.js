@@ -162,7 +162,9 @@ class Game {
     }
 
     flag_cell(xy) {
-        if (!this.dead && !this.opened[xy[0]][xy[1]]) {
+        if (this.opened[xy[0]][xy[1]]) {
+            this.on_number_click(xy[0], xy[1])
+        } else if (!this.dead && !this.opened[xy[0]][xy[1]]) {
             this.flagged[xy[0]][xy[1]] = !this.flagged[xy[0]][xy[1]]
         }
     }
@@ -226,6 +228,9 @@ function get_field_from_server() {
 }
 
 function display_others_data() {
+    for (var i = 0; i < 11; i++) {
+        document.getElementById('nickname' + i).innerHTML = ''
+    }
     for (var i = 0; i < players_data.length; i++) {
         var current_player = players_data[i]
         var tmp = document.getElementById('nickname' + i)
@@ -246,9 +251,9 @@ function on_game_end() {
                 last_triggered_event = [data['name'], data['end_state']]
                 // console.log(data)
                 if (last_triggered_event[1] == 'won') {
-                    alert(data['name'] + ' WON')
+                    alert(data['name'] + ' Won')
                 } else {
-                    alert(data['name'] + ' LOST')
+                    alert(data['name'] + ' Lost')
                 }
                 new_game()
             }
@@ -298,15 +303,18 @@ function get_players_data() {
     $.get({
         url: '/get_players_data',
         success: function(data) {
-            amount_prev = players_data.length
+            // amount_prev = players_data.length
             players_data = []
             for (var i in data) {
                 // players_data = data
                 players_data.push(data[i])
                 if (data[i]['ip'] == client_ip) {
-                    win_amount = data[i]['win_amount']
+                    // win_amount = data[i]['win_amount']
+                    document.getElementById('navbar-nickname').innerHTML = data[i]['nickname']
+                    // console.log(data[i]['nickname'])
                     // console.log(data)
                 }
+                // console.log(data[i]['nickname'])
             }
             // if (amount_prev != players_data.length && players_data.length != 1) {
             //     alert('new player joined, reloading the page' + players_data)
@@ -323,6 +331,12 @@ function new_game() {
     get_field_from_server()
 }
 
+function on_player_leave() {
+    $.post("/on_player_exit", {
+        // data: JSON.stringify({data_dict})
+        data: client_ip
+    })
+}
 //p5.js functions
 function preload() {
     img.push(loadImage("./static/img/0.jpg"))
@@ -373,6 +387,7 @@ function draw() {
             send_data()
             get_players_data()
             on_game_end()
+            // console.log(client_ip)
             count = 0
         }
         pop()
@@ -382,27 +397,15 @@ function draw() {
 // Mouse control functions
 let mouse_lock_right = false
 let mouse_lock_left = false
-var mouse_is_inverted = false
 function mousePressed() {
     if (mouseX > 0 && mouseY > 0 && mouseX < WIDTH * CELL_SIZE && mouseY < HEIGHT * CELL_SIZE) {
-        if (!mouse_is_inverted) {
-            if (mouseButton == RIGHT) {
-                mouse_lock_right = true
-                game.flag_cell([Math.floor(mouseX / 30), Math.floor(mouseY / 30)])
-            }
-            if (mouseButton == LEFT) {
-                mouse_lock_left = true
-                game.open_cell([Math.floor(mouseX / 30), Math.floor(mouseY / 30)])
-            }
-        } else {
-            if (mouseButton == LEFT) {
-                mouse_lock_right = true
-                game.flag_cell([Math.floor(mouseX / 30), Math.floor(mouseY / 30)])
-            }
-            if (mouseButton == RIGHT) {
-                mouse_lock_left = true
-                game.open_cell([Math.floor(mouseX / 30), Math.floor(mouseY / 30)])
-            }
+        if (mouseButton == RIGHT) {
+            mouse_lock_right = true
+            game.flag_cell([Math.floor(mouseX / 30), Math.floor(mouseY / 30)])
+        }
+        if (mouseButton == LEFT) {
+            mouse_lock_left = true
+            game.open_cell([Math.floor(mouseX / 30), Math.floor(mouseY / 30)])
         }
     }
 }

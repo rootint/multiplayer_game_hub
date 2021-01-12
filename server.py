@@ -10,12 +10,12 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = '#Extr3m3ly_Rand0M_s3creT_kEy_?/;'
 
 # FIX NON-SQUARED FIELD
-WIDTH = 10
-HEIGHT = 10
-MINES = 6
+WIDTH = 16
+HEIGHT = 16
+MINES = 40
 main_field = []
 current_players_data = {}
-player_amount = 0
+player_amount = 11
 
 class FieldGenerator:
     def __init__(self, width, height, mines):
@@ -71,7 +71,7 @@ class FieldGenerator:
 @app.route('/postdata', methods=['POST'])
 def postdata():
     data = json.loads(request.form['data'])['data_dict']
-    print(data)
+    # print(data)
     current_players_data[data['ip']] = data
     print(current_players_data)
     return 'Data received', 200
@@ -140,6 +140,16 @@ def get_minefield():
     return str(main_field)
     
 
+@app.route('/on_player_exit', methods=['POST'])
+def on_player_exit():
+    data = request.form['data']
+    print('LEFT!', data)
+    # current_players_data.popitem(data)
+    del current_players_data[data]
+    # return str(main_field)
+    return 'Data received', 200
+
+
 @app.route('/cookie')
 def cookie():
     name = current_players_data[str(request.remote_addr)]['nickname']
@@ -153,7 +163,12 @@ def cookie():
 def get_username():
     if request.cookies.get('last_used_name'):
         current_players_data[str(request.remote_addr)]['nickname'] = request.cookies.get('last_used_name')
-    name = current_players_data[str(request.remote_addr)]['nickname']
+        if str(request.remote_addr) in current_players_data:
+            name = current_players_data[str(request.remote_addr)]['nickname']
+        else:
+            name = request.remote_addr
+    else:
+        name = request.remote_addr
     return name
 
 
@@ -173,15 +188,14 @@ def get_field_measures():
 @app.route('/')
 def index():
     global player_amount
-    if request.remote_addr not in current_players_data.keys():
-        player_amount += 1
+    # if request.remote_addr not in current_players_data.keys():
+    #     player_amount += 1
     # nickname = request.remote_addr if len(current_players_data) == 0 else current_players_data[request.remote_addr]['nickname']
     nickname = request.remote_addr
     if len(nickname) > 15:
         nickname = nickname[:15] + '...'
     params = {
-        "nickname": str(nickname.split()[0]),
-        "player_amount": len(current_players_data)
+        "player_amount": player_amount
     }
     print('----PLAYER AMOUNT', player_amount, len(current_players_data), current_players_data.keys())
     # res = make_response(render_template('index.html', **params))
@@ -189,6 +203,9 @@ def index():
     #     print('COOKIE CHANGED', request.cookies.get('last_user_name'))
     #     res.set_cookie('last_used_name', str(request.remote_addr), max_age=60*60*24)
     #     print('COOKIE CHANGED', request.cookies.get('last_user_name'))
+    # else:
+    #     params['nickname'] = request.cookies.get('last_used_name')
+    #     print('NICKNAME!!!!!', request.cookies.get('last_used_name'))
     return render_template('index.html', **params)
     # return res
 
@@ -199,6 +216,7 @@ def main():
     # app.run(port=1337, host='192.168.1.2')
     # app.run(port=1337, host="25.66.130.126")
     # app.run(port=1337, host="0.0.0.0")
+    # 46.146.186.210:1337
     
 
 def generate_field(width, height, mines):

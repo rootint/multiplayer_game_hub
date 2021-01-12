@@ -1,0 +1,7 @@
+Multiplayer Minesweeper
+
+- cookie for nickname / records
+- another player progress bar
+- generation of a new field on game restart
+- rating system(?)
+- some visual improvements

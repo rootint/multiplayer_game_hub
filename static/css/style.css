@@ -4,6 +4,31 @@
     margin: 0 auto;
 }
 
+@font-face {
+    font-family: arcade_font;
+    src: url(../fonts/arcade.ttf)
+}
+
+label {
+    font-family: arcade_font;
+    font-size: 20pt;
+}
+
+.centered {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 80%;
+}
+
+table, tr, td {
+    border: 1px solid black;
+}
+
+/* #minefield {
+    text-align: center; 
+    vertical-align: middle;
+} */
 /* #scoreboard {
     margin-bottom: 0 auto;
 } */

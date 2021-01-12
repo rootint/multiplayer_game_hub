@@ -131,6 +131,8 @@ def send_client_ip():
 
 @app.route('/get_players_data', methods=['GET'])
 def send_players_data():
+    if '' in current_players_data:
+        del current_players_data['']
     return jsonify(current_players_data), 200
 
 
@@ -211,11 +213,11 @@ def index():
 
 def main():
     generate_field(WIDTH, HEIGHT, MINES)
-    app.run(port=1337, host="127.0.0.1")
+    # app.run(port=1337, host="127.0.0.1")
     # app.run(port=1337, host='192.168.1.8')
     # app.run(port=1337, host='192.168.1.2')
     # app.run(port=1337, host="25.66.130.126")
-    # app.run(port=1337, host="0.0.0.0")
+    app.run(port=1337, host="0.0.0.0")
     # 46.146.186.210:1337
     
 

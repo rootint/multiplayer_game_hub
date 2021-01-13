@@ -229,16 +229,33 @@ function get_field_from_server() {
 
 function display_others_data() {
     for (var i = 0; i < 11; i++) {
-        document.getElementById('nickname' + i).innerHTML = ''
+        // document.getElementById('nickname_title' + i).innerHTML = ''
+        document.getElementById('nickname_card' + i).style.visibility = 'hidden'
     }
     for (var i = 0; i < players_data.length; i++) {
         var current_player = players_data[i]
-        var tmp = document.getElementById('nickname' + i)
-        tmp.innerHTML = current_player['nickname'] + '  ' +
-                        current_player['total_opened'] + '  ' + 
-                        current_player['game_state'] + '  ' + 
-                        current_player['total_flagged'] + '  ' +
-                        current_player['win_amount']
+        var nickname_title_label = document.getElementById('nickname_title' + i.toString())
+        // var nickname_label = document.getElementById('nickname_label' + i.toString())
+        var opened_percent = round((current_player['total_opened'] / (WIDTH * HEIGHT)) * 100)
+        // var flagged_percent = round((current_player['total_flagged'] / MINES) * 100)
+        // fixes the weird blinking on 0 flags
+        if (current_player['total_flagged'] == 0) {
+            $('#nickname_flagged_bar' + i).css('width', '0%')    
+        }
+
+        // console.log(opened_percent, flagged_percent, MINES)
+        $('#nickname_opened_bar' + i).css('width', opened_percent + '%')
+        $('#nickname_flagged_label' + i).innerHTML = current_player['total_flagged'] + ' / ' + MINES
+        // $('#nickname_flagged_label' + i).css('width', flagged_percent + '%')
+        document.getElementById('nickname_card' + i).style.visibility = 'visible'
+        nickname_title_label.innerHTML = current_player['nickname']
+        // nickname_label.innerHTML = current_player['nickname']
+        // $('#nickname_label' + i).innerHTML = current_player['nickname']
+        // tmp.innerHTML = current_player['nickname'] + '  ' +
+        //                 current_player['total_opened'] + '  ' + 
+        //                 current_player['game_state'] + '  ' + 
+        //                 current_player['total_flagged'] + '  ' +
+        //                 current_player['win_amount']
     }
 }
 
@@ -337,6 +354,7 @@ function on_player_leave() {
         data: client_ip
     })
 }
+
 //p5.js functions
 function preload() {
     img.push(loadImage("./static/img/0.jpg"))
@@ -369,7 +387,7 @@ function setup() {
             console.log('width', WIDTH, HEIGHT)
             new_game()
             get_client_ip()
-            // Disable right-click on the field (for better flag-placing)
+            // Disable right-click on the field (for better flag-placement)
             document.oncontextmenu = function() { return false; }
             game_launched = true
         }
@@ -413,4 +431,48 @@ function mousePressed() {
 function mouseReleased() {
     mouse_lock_right = false
     mouse_lock_left = false
+}
+
+// Chat handling
+
+$(document).on("keyup", (event) => {
+    // console.log(event)
+    if (event.keyCode === 13) { 
+        $("#send_message_btn").click(); 
+    } 
+})
+
+// $("#chat_input").on("keyup", (event) => {
+//     if (event.keyCode === 13) { 
+//         $("#send_message_btn").click(); 
+//     } 
+// })
+
+// var input = document.getElementById("chat_input");
+
+// // Execute a function when the user releases a key on the keyboard
+// input.addEventListener("keyup", function(event) {
+//   // Number 13 is the "Enter" key on the keyboard
+//   if (event.key === 13) {
+//     // Cancel the default action, if needed
+//     event.preventDefault();
+//     // Trigger the button element with a click
+//     document.getElementById("send_message_btn").click();
+//   }
+// });
+
+// $('#chat_input').on("input", (event) => {
+//     console.log(event.keyCode)
+// })
+
+
+function send_message() {
+    if ($('#chat_input').val() != '') {
+        $.post("/send_message", {
+            // data: JSON.stringify({data_dict})
+            // $('#chat_input').innerHTML = ''
+            data: JSON.stringify([nickname, $('#chat_input').val()]),
+        })
+        $('#chat_input').val('')
+    }   
 }

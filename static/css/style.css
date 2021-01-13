@@ -1,7 +1,9 @@
-#container {
+.container {
     /* align-items: center; */
     width: 100%;
-    margin: 0 auto;
+    /* margin: 0 auto; */
+    height: 80%;
+    margin-top: 2%;
 }
 
 @font-face {
@@ -9,10 +11,10 @@
     src: url(../fonts/arcade.ttf)
 }
 
-label {
+/* label {
     font-family: arcade_font;
     font-size: 20pt;
-}
+} */
 
 .centered {
     position: absolute;
@@ -25,10 +27,16 @@ table, tr, td {
     border: 1px solid black;
 }
 
-/* #minefield {
+#main_table td 
+{
     text-align: center; 
     vertical-align: middle;
-} */
+}
+
+#minefield {
+    text-align: center; 
+    vertical-align: middle;
+}
 /* #scoreboard {
     margin-bottom: 0 auto;
 } */

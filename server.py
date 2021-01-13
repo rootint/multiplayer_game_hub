@@ -16,6 +16,7 @@ MINES = 40
 main_field = []
 current_players_data = {}
 player_amount = 11
+chat = []
 
 class FieldGenerator:
     def __init__(self, width, height, mines):
@@ -90,6 +91,19 @@ def change_nickname():
         res.set_cookie('last_used_name', name, max_age=60*60*24) # one-day cookie
         print('COOKIE CHANGED', request.cookies.get('last_user_name'))
     return res, 200
+
+
+@app.route('/send_message', methods=['POST'])
+def send_message():
+    data = json.loads(request.form['data'])
+    print('MESSAGE RECEIVED', data)
+    chat.append(data)
+    return 'Data received', 200
+
+
+@app.route('/get_messages_list', methods=['GET'])
+def get_messages_list():
+    return jsonify(chat), 200
 
 
 @app.route('/check_for_game_end', methods=['GET'])

@@ -40,3 +40,25 @@
               </div>
             </div>
           </nav>   -->
+
+
+
+
+<nav class="navbar navbar-expand-md navbar-dark bg-dark">
+            <div class="navbar-collapse">
+              <a class="navbar-brand" href="#" style="margin-left: 2%">Multiplayer Minesweeper</a>
+                <!-- <li class="nav-item"> -->
+                  
+                    <input type="text" class="form-control" id="nickname_input" aria-label="Small" aria-describedby="inputGroup-sizing-sm" placeholder="Your name...">
+                  <button type="button" class="btn btn-outline-primary btn-sm" onclick='send_nickname()'>Change</button>
+                </div>
+                <!-- </li> -->
+            </div>
+            <!-- <div class="navbar-collapse collapse w-100 order-1"> -->
+                <ul class="nav navbar-nav navbar-right">
+                    <!-- <li class="nav-item"> -->
+                        <a class="nav-link" id="navbar-nickname" href="#">{{nickname}}</a>
+                    <!-- </li> -->
+                </ul>
+            <!-- </div> -->
+            </nav>

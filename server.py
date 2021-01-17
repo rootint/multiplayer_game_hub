@@ -17,6 +17,8 @@ main_field = []
 current_players_data = {}
 player_amount = 11
 chat = []
+gameover_amount = 0
+end_state = False
 
 class FieldGenerator:
     def __init__(self, width, height, mines):
@@ -103,11 +105,15 @@ def send_message():
 
 @app.route('/get_messages_list', methods=['GET'])
 def get_messages_list():
-    return jsonify(chat), 200
+    # print(chat.reverse())
+    # chat = chat.reverse()
+    return jsonify(chat[::-1]), 200
 
 
 @app.route('/check_for_game_end', methods=['GET'])
 def check_for_game_end():
+    gameover_amount = 0
+    global end_state
     answer = {
         'game_ended': False, 
         'end_state': 'state', 
@@ -117,21 +123,31 @@ def check_for_game_end():
     }
     for i in current_players_data:
         if current_players_data[i]['game_state'] == 'won':
-            answer['game_ended'] = True
+            if end_state:
+                answer['game_ended'] = True
+                break
             answer['ip'] = str(i)
             answer['name'] = current_players_data[i]['nickname']
             answer['end_state'] = 'won' 
             # current_players_data[i]['win_amount'] += 1
+            gameover_amount += 1
             break
         elif current_players_data[i]['game_state'] == 'lost':
-            answer['game_ended'] = True
+            if end_state:
+                answer['game_ended'] = True
+                break
             answer['ip'] = str(i)
             answer['name'] = current_players_data[i]['nickname']
             answer['end_state'] = 'lost' 
             # for j in current_players_data:
             #     if j != i:
             #         current_players_data[j]['win_amount'] += 1
-            break
+            gameover_amount += 1
+    print('GAMEOVERAMOUNT', gameover_amount)
+    if len(current_players_data) == 1 and gameover_amount == 1:
+        answer['game_ended'] = True
+    elif gameover_amount == len(current_players_data) - 1 and len(current_players_data) not in [0, 1]:
+        answer['game_ended'] = True
     if answer['game_ended']:
         generate_field(WIDTH, HEIGHT, MINES)
         answer['new_field'] = main_field
@@ -154,6 +170,13 @@ def send_players_data():
 def get_minefield():
     global main_field
     return str(main_field)
+
+
+@app.route('/change_end_state', methods=['GET'])
+def change_end_state():
+    global end_state
+    end_state = not end_state
+    return 'Done', 200
     
 
 @app.route('/on_player_exit', methods=['POST'])
@@ -164,6 +187,17 @@ def on_player_exit():
     del current_players_data[data]
     # return str(main_field)
     return 'Data received', 200
+
+
+@app.route('/force_restart', methods=['GET'])
+def force_restart():
+    global current_players_data, chat, main_field
+    # for i in current_players_data:
+    current_players_data = {}
+    chat = []
+    generate_field(WIDTH, HEIGHT, MINES)
+    print('RESTARTING SERVER')
+    return 'Restarted', 200
 
 
 @app.route('/cookie')

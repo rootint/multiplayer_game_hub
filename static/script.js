@@ -1,14 +1,21 @@
 // Made by RandoM, 2021
+const FPS = 20, DATA_SENT_PER_SECOND = 2
 var MINES = 40, WIDTH = 16, HEIGHT = 16, CELL_SIZE = 30
-let FPS = 20, DATA_SENT_PER_SECOND = 2
 
 var img = []
 var game_field, game_height = 10, game_width = 10
 var last_triggered_event
 var win_amount = 0
 var nickname = ''
+var shortened_nickname = ''
 var client_ip = ''
 var players_data = []
+var chat_messages = []
+
+$(document).ready(() => {
+    console.log('im ready')
+    $('#chat_body').scrollTop($('#chat_body')[0].scrollHeight);
+})
 
 class Game {
     field = []
@@ -122,6 +129,7 @@ class Game {
         if (this.opened[x][y])
             return
         this.opened[x][y] = true
+        this.flagged[x][y] = false
         if (this.field[x][y] == 0) {
             this.zero_fill(x, y + 1)
             this.zero_fill(x, y - 1)
@@ -224,8 +232,9 @@ function get_field_from_server() {
             game.field = JSON.parse(data)
         }
     })
-
 }
+
+
 
 function display_others_data() {
     for (var i = 0; i < 11; i++) {
@@ -236,19 +245,26 @@ function display_others_data() {
         var current_player = players_data[i]
         var nickname_title_label = document.getElementById('nickname_title' + i.toString())
         // var nickname_label = document.getElementById('nickname_label' + i.toString())
-        var opened_percent = round((current_player['total_opened'] / (WIDTH * HEIGHT)) * 100)
+        var opened_percent = round((current_player['total_opened'] / (WIDTH * HEIGHT - MINES)) * 100)
         // var flagged_percent = round((current_player['total_flagged'] / MINES) * 100)
         // fixes the weird blinking on 0 flags
         if (current_player['total_flagged'] == 0) {
             $('#nickname_flagged_bar' + i).css('width', '0%')    
         }
-
+        if (current_player['game_state'] == 'lost') {
+            $('#nickname_card' + i).addClass('bg-danger')
+        } else if (current_player['game_state'] == 'nothing') {
+            $('#nickname_card' + i).removeClass('bg-danger')
+            $('#nickname_card' + i).removeClass('bg-success')
+        } else {
+            $('#nickname_card' + i).addClass('bg-success')
+        }
         // console.log(opened_percent, flagged_percent, MINES)
         $('#nickname_opened_bar' + i).css('width', opened_percent + '%')
-        $('#nickname_flagged_label' + i).innerHTML = current_player['total_flagged'] + ' / ' + MINES
-        // $('#nickname_flagged_label' + i).css('width', flagged_percent + '%')
+        $('#nickname_flagged_label' + i).html(current_player['total_flagged'] + ' / ' + MINES)
         document.getElementById('nickname_card' + i).style.visibility = 'visible'
         nickname_title_label.innerHTML = current_player['nickname']
+        // $('#nickname_flagged_label' + i).css('width', flagged_percent + '%')
         // nickname_label.innerHTML = current_player['nickname']
         // $('#nickname_label' + i).innerHTML = current_player['nickname']
         // tmp.innerHTML = current_player['nickname'] + '  ' +
@@ -267,11 +283,10 @@ function on_game_end() {
                 game.field = data['new_field']
                 last_triggered_event = [data['name'], data['end_state']]
                 // console.log(data)
-                if (last_triggered_event[1] == 'won') {
-                    alert(data['name'] + ' Won')
-                } else {
-                    alert(data['name'] + ' Lost')
-                }
+                // if (last_triggered_event[1] == 'won') {
+                //     // alert(data['name'] + ' Won')
+                // }
+                players_data = []
                 new_game()
             }
         }
@@ -291,6 +306,11 @@ function send_nickname() {
     } else {
         document.getElementById('navbar-nickname').innerHTML = display_nickname
     }   
+    shortened_nickname = shorten_nickname(nickname)
+}
+
+function shorten_nickname() {
+
 }
 
 function get_client_ip() {
@@ -350,7 +370,6 @@ function new_game() {
 
 function on_player_leave() {
     $.post("/on_player_exit", {
-        // data: JSON.stringify({data_dict})
         data: client_ip
     })
 }
@@ -405,14 +424,14 @@ function draw() {
             send_data()
             get_players_data()
             on_game_end()
-            // console.log(client_ip)
+            display_chat_messages()
             count = 0
         }
         pop()
     }
 }
 
-// Mouse control functions
+// Mouse control handling
 let mouse_lock_right = false
 let mouse_lock_left = false
 function mousePressed() {
@@ -434,45 +453,57 @@ function mouseReleased() {
 }
 
 // Chat handling
-
 $(document).on("keyup", (event) => {
-    // console.log(event)
     if (event.keyCode === 13) { 
         $("#send_message_btn").click(); 
     } 
 })
 
-// $("#chat_input").on("keyup", (event) => {
-//     if (event.keyCode === 13) { 
-//         $("#send_message_btn").click(); 
-//     } 
-// })
-
-// var input = document.getElementById("chat_input");
-
-// // Execute a function when the user releases a key on the keyboard
-// input.addEventListener("keyup", function(event) {
-//   // Number 13 is the "Enter" key on the keyboard
-//   if (event.key === 13) {
-//     // Cancel the default action, if needed
-//     event.preventDefault();
-//     // Trigger the button element with a click
-//     document.getElementById("send_message_btn").click();
-//   }
-// });
-
-// $('#chat_input').on("input", (event) => {
-//     console.log(event.keyCode)
-// })
-
-
 function send_message() {
-    if ($('#chat_input').val() != '') {
+    if ($('#chat_input').val() == '/force_restart') {
+        $.get({
+            url: "/force_restart",
+            success: (data) => {
+                location.reload()
+                $.post("/send_message", {
+                    data: JSON.stringify([nickname, 'SHIFT F5']),
+                })
+            }
+        })
+    } else if ($('#chat_input').val() == '/change_game_end') {
+        $.get({
+            url: "/change_end_state",
+            success: (data) => {
+                location.reload()
+            }
+        })
+        $('#chat_input').val('')
+    }  else if ($('#chat_input').val() != '') {
         $.post("/send_message", {
-            // data: JSON.stringify({data_dict})
-            // $('#chat_input').innerHTML = ''
             data: JSON.stringify([nickname, $('#chat_input').val()]),
         })
         $('#chat_input').val('')
     }   
+}
+
+function display_chat_messages() {
+    $.get({
+        url: "/get_messages_list",
+        success: (data) => {
+            chat_messages = data
+            // [['R', 'asdasd'], ['F', 'adasdasd']]
+            // console.log(chat_messages)
+            for (var i = 0; i < 20; i++) {
+                $('#chat_bubble' + i).css("visibility", "hidden")
+            }
+            var i = 0
+            for (var message in chat_messages) {
+                i += 1
+                // console.log(message)
+                $('#chat_bubble' + (20 - i)).css("visibility", "visible")
+                $('#chat_message_sender' + (20 - i)).html('<i>' + chat_messages[message][0] + '</i>')
+                $('#chat_message_content' + (20 - i)).html(chat_messages[message][1])
+            }
+        }
+    })
 }

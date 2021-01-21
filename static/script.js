@@ -30,21 +30,21 @@ class Game {
     current_state = 'nothing'
     total_flagged = 0
 
-    constructor(field, height, width, mines) {
+    constructor(field, width, height, mines) {
         this.field = field
         this.width = width
         this.height = height 
         this.mines = mines
-        for (var i = 0; i < height; i++) {
+        for (var i = 0; i < width; i++) {
             var tmp1 = [], tmp2 = []
-            for (var j = 0; j < width; j++) {
+            for (var j = 0; j < height; j++) {
                 tmp1.push(false)
                 tmp2.push(false)
             }
             this.flagged.push(tmp1)
             this.opened.push(tmp2)
         }
-        // console.log('constructor', this.field, this.width, this.height, this.mines)
+        console.log('constructor', this.field, this.width, this.height, this.mines, this.opened)
     }
 
     get_flags_around(x, y) {
@@ -153,35 +153,35 @@ class Game {
             image(img[11], x * this.cell_size + 1, y * this.cell_size + 1, this.cell_size - 2, this.cell_size - 2)     
     }
 
-    open_cell(xy) {
+    open_cell(x, y) {
         if (!this.dead) {
-            if (!this.flagged[xy[0]][xy[1]]) {
-                if (this.field[xy[0]][xy[1]] == 9) {
+            if (!this.flagged[x][y]) {
+                if (this.field[x][y] == 9) {
                     this.on_game_finish()
                     this.dead = true
-                } else if (this.field[xy[0]][xy[1]] == 0) {
-                    this.zero_fill(xy[0], xy[1])
+                } else if (this.field[x][y] == 0) {
+                    this.zero_fill(x, y)
                 }
-                if (this.opened[xy[0]][xy[1]])
-                    this.on_number_click(xy[0], xy[1])
-                this.opened[xy[0]][xy[1]] = true
+                if (this.opened[x][y])
+                    this.on_number_click(x, y)
+                this.opened[x][y] = true
             }
         }
     }
 
-    flag_cell(xy) {
-        if (this.opened[xy[0]][xy[1]]) {
-            this.on_number_click(xy[0], xy[1])
-        } else if (!this.dead && !this.opened[xy[0]][xy[1]]) {
-            this.flagged[xy[0]][xy[1]] = !this.flagged[xy[0]][xy[1]]
+    flag_cell(x, y) {
+        if (this.opened[x][y]) {
+            this.on_number_click(x, y)
+        } else if (!this.dead && !this.opened[x][y]) {
+            this.flagged[x][y] = !this.flagged[x][y]
         }
     }
 
     draw() {
         this.total_opened = 0
         this.total_flagged = 0
-        for (var i = 0; i < this.height; i++) {
-            for (var j = 0; j < this.width; j++) {
+        for (var i = 0; i < this.width; i++) {
+            for (var j = 0; j < this.height; j++) {
                 this.draw_cell(i, j)
                 if (this.opened[i][j]) {
                     this.total_opened += 1
@@ -210,26 +210,14 @@ function send_data() {
     })
 }
 
-function generate_field() {
-    new_game()
-    return new Promise(function(resolve, reject) {
-        $.get({
-            url: "/generate",
-            success: function(data) {
-                resolve(data)
-            }
-        })
-    }).then(function(result) {
-        game.field = JSON.parse(result)
-    })
-}
-
 function get_field_from_server() {
     $.get({
         url: "/get_minefield",
         success: function(data) {
             console.log(data)
             game.field = JSON.parse(data)
+            console.log(game.field)
+            console.log(game.field[0][4], game.field[4][0])
         }
     })
 }
@@ -368,10 +356,15 @@ function new_game() {
     get_field_from_server()
 }
 
+// Forced to do "player_left" because beforeunload doesn't always work, so this kinda improves reliability
+var player_left = false
 function on_player_leave() {
-    $.post("/on_player_exit", {
-        data: client_ip
-    })
+    if (!player_left) {
+        $.post("/on_player_exit", {
+            data: client_ip
+        })
+        player_left = true
+    }
 }
 
 //p5.js functions
@@ -403,7 +396,7 @@ function setup() {
             canvas.drawingContext.imageSmoothingEnabled = false
             canvas.parent('minefield')
             frameRate(FPS) 
-            console.log('width', WIDTH, HEIGHT)
+            console.log('width, height, mines', WIDTH, HEIGHT, MINES)
             new_game()
             get_client_ip()
             // Disable right-click on the field (for better flag-placement)
@@ -436,13 +429,14 @@ let mouse_lock_right = false
 let mouse_lock_left = false
 function mousePressed() {
     if (mouseX > 0 && mouseY > 0 && mouseX < WIDTH * CELL_SIZE && mouseY < HEIGHT * CELL_SIZE) {
+        console.log([Math.floor(mouseX / 30), Math.floor(mouseY / 30)])
         if (mouseButton == RIGHT) {
             mouse_lock_right = true
-            game.flag_cell([Math.floor(mouseX / 30), Math.floor(mouseY / 30)])
+            game.flag_cell(Math.floor(mouseX / 30), Math.floor(mouseY / 30))
         }
         if (mouseButton == LEFT) {
             mouse_lock_left = true
-            game.open_cell([Math.floor(mouseX / 30), Math.floor(mouseY / 30)])
+            game.open_cell(Math.floor(mouseX / 30), Math.floor(mouseY / 30))
         }
     }
 }

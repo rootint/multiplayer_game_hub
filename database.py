@@ -1,18 +1,3 @@
-
-# import sqlite3
-# from werkzeug.security import generate_password_hash, check_password_hash
-
-# db = sqlite3.connect('db/main.db')
-# cursor = db.cursor()
-# query = """SELECT * FROM users"""
-# # print(generate_password_hash('D1337_47'))
-# # print(check_password_hash(generate_password_hash('RNDRandoM'), 'RNDRandoM'))
-# # query = """INSERT INTO users (login, nickname, password, dark_mode) VALUES ('rnd_random', 'R', 'pbkdf2:sha256:150000$DSunWChY$ac5032d806b225080b87a98cba838199cee581846127eadf164290bba62f9496', true)"""
-# result = list(cursor.execute(query).fetchall())
-# print(result)
-# db.commit()
-# db.close()
-
 import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
 

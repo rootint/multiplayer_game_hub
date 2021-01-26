@@ -11,8 +11,13 @@ app.config['SECRET_KEY'] = '#Extr3m3ly_Rand0M_s3creT_kEy_?/;'
 
 @app.route('/')
 def index():
-    params = {}
-    return render_template('index.html', **params)
+    # params = {}
+    # return render_template('index.html', **params)
+    return render_template('index.html')
+
+@app.route('/minesweeper')
+def minesweeper():
+    return render_template('minesweeper.html')
 
 def main():
     database = Database()
